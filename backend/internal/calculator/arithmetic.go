@@ -42,7 +42,10 @@ func SquareRoot(a float64) (float64, error) {
 }
 
 func Percentage(a, b float64) (float64, error) {
-	return finite(a * b / 100)
+	if math.Abs(a) >= math.Abs(b) {
+		return finite((a / 100) * b)
+	}
+	return finite(a * (b / 100))
 }
 
 func finite(result float64) (float64, error) {

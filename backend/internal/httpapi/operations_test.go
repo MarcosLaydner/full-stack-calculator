@@ -43,6 +43,10 @@ func TestPercentageEndpoint(t *testing.T) {
 	assertEndpointResult(t, "/api/percentage", `{"a":20,"b":80}`, `{"result":16}`)
 }
 
+func TestPercentageEndpointAvoidsIntermediateOverflow(t *testing.T) {
+	assertEndpointResult(t, "/api/percentage", `{"a":1e308,"b":100}`, `{"result":1e+308}`)
+}
+
 func TestEndpointValidation(t *testing.T) {
 	tests := []struct {
 		name    string

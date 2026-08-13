@@ -61,6 +61,25 @@ func TestPercentage(t *testing.T) {
 	assertResult(t, Percentage, 20, 80, 16)
 }
 
+func TestPercentageAvoidsIntermediateOverflow(t *testing.T) {
+	tests := []struct {
+		name string
+		a    float64
+		b    float64
+		want float64
+	}{
+		{name: "larger first operand", a: 1e308, b: 100, want: 1e308},
+		{name: "larger second operand", a: 100, b: 1e308, want: 1e308},
+		{name: "negative larger operand", a: -1e308, b: 100, want: -1e308},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assertResult(t, Percentage, tt.a, tt.b, tt.want)
+		})
+	}
+}
+
 func TestNonFiniteInput(t *testing.T) {
 	_, err := Add(math.Inf(1), 1)
 	if !errors.Is(err, ErrNonFiniteResult) {
