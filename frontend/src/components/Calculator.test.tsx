@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react'
+import { act, cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Calculator } from './Calculator'
@@ -50,5 +50,37 @@ describe('Calculator', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Calculate' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('division by zero')
+  })
+
+  it('keeps the calculator cleared when an in-flight request resolves', async () => {
+    let resolveRequest!: (response: Response) => void
+    vi.spyOn(globalThis, 'fetch').mockImplementation(() => new Promise((resolve) => {
+      resolveRequest = resolve
+    }))
+    render(<Calculator />)
+
+    await userEvent.type(screen.getByLabelText('First number'), '35')
+    await userEvent.type(screen.getByLabelText('Second number'), '7')
+    await userEvent.click(screen.getByRole('button', { name: 'Calculate' }))
+
+    const requestOptions = vi.mocked(fetch).mock.calls[0][1]
+    expect(requestOptions?.signal?.aborted).toBe(false)
+    await userEvent.click(screen.getByRole('button', { name: 'Clear' }))
+
+    expect(requestOptions?.signal?.aborted).toBe(true)
+    expect(screen.getByLabelText('First number')).toHaveValue(null)
+    expect(screen.getByLabelText('Second number')).toHaveValue(null)
+    expect(screen.getByText('0')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Calculate' })).toBeEnabled()
+
+    await act(async () => {
+      resolveRequest(new Response(JSON.stringify({ result: 42 }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      }))
+    })
+
+    expect(screen.getByText('0')).toBeInTheDocument()
+    expect(screen.queryByText('42')).not.toBeInTheDocument()
   })
 })

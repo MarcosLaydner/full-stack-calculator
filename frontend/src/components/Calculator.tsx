@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { calculate, type Operation } from '../api/calculator'
 
 const operations: Array<{ value: Operation; symbol: string; label: string }> = [
@@ -22,7 +22,11 @@ export function Calculator() {
   const [result, setResult] = useState<string>('0')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const activeRequest = useRef<AbortController | null>(null)
+  const requestID = useRef(0)
   const isUnary = operation === 'square_root'
+
+  useEffect(() => () => activeRequest.current?.abort(), [])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -39,22 +43,40 @@ export function Calculator() {
       return
     }
 
+    activeRequest.current?.abort()
+    const controller = new AbortController()
+    const currentRequestID = ++requestID.current
+    activeRequest.current = controller
     setIsLoading(true)
     try {
-      const value = await calculate({ operation, a, ...(!isUnary && { b }) })
-      setResult(formatResult(value))
+      const value = await calculate(
+        { operation, a, ...(!isUnary && { b }) },
+        controller.signal
+      )
+      if (currentRequestID === requestID.current) {
+        setResult(formatResult(value))
+      }
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : 'Something went wrong')
+      if (currentRequestID === requestID.current && !controller.signal.aborted) {
+        setError(caughtError instanceof Error ? caughtError.message : 'Something went wrong')
+      }
     } finally {
-      setIsLoading(false)
+      if (currentRequestID === requestID.current) {
+        activeRequest.current = null
+        setIsLoading(false)
+      }
     }
   }
 
   function clear() {
+    requestID.current++
+    activeRequest.current?.abort()
+    activeRequest.current = null
     setFirst('')
     setSecond('')
     setResult('0')
     setError('')
+    setIsLoading(false)
   }
 
   return (

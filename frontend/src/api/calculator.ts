@@ -21,7 +21,7 @@ interface ErrorResponse {
   error?: string
 }
 
-export async function calculate(request: CalculateRequest): Promise<number> {
+export async function calculate(request: CalculateRequest, signal?: AbortSignal): Promise<number> {
   const endpoint = request.operation === 'square_root' ? 'square-root' : request.operation
   const operands = request.b === undefined
     ? { a: request.a }
@@ -29,7 +29,8 @@ export async function calculate(request: CalculateRequest): Promise<number> {
   const response = await fetch(`/api/${endpoint}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(operands)
+    body: JSON.stringify(operands),
+    signal
   })
 
   const payload = await response.json() as CalculateResponse & ErrorResponse

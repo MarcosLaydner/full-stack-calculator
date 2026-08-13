@@ -11,7 +11,7 @@ export function App() {
         </div>
       </header>
       <Calculator />
-      <footer>Calculated by a Go microservice</footer>
+      <footer>Calculated by a Go microservice · Made by MarcosLaydner</footer>
     </main>
   )
 }
