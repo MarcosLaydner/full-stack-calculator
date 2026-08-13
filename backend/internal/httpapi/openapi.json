@@ -1,0 +1,188 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Calculator API",
+    "version": "1.0.0",
+    "description": "A REST API for basic and advanced arithmetic operations."
+  },
+  "servers": [
+    { "url": "/", "description": "Current server" }
+  ],
+  "tags": [
+    { "name": "Calculator", "description": "Arithmetic operations" },
+    { "name": "System", "description": "Service status" }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Check service health",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "The service is healthy",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" },
+                "example": { "status": "ok" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/add": {
+      "post": {
+        "tags": ["Calculator"],
+        "summary": "Add two numbers",
+        "operationId": "add",
+        "requestBody": { "$ref": "#/components/requestBodies/BinaryOperation" },
+        "responses": { "200": { "$ref": "#/components/responses/Result" }, "400": { "$ref": "#/components/responses/BadRequest" }, "422": { "$ref": "#/components/responses/InvalidCalculation" } }
+      }
+    },
+    "/api/subtract": {
+      "post": {
+        "tags": ["Calculator"],
+        "summary": "Subtract the second number from the first",
+        "operationId": "subtract",
+        "requestBody": { "$ref": "#/components/requestBodies/BinaryOperation" },
+        "responses": { "200": { "$ref": "#/components/responses/Result" }, "400": { "$ref": "#/components/responses/BadRequest" }, "422": { "$ref": "#/components/responses/InvalidCalculation" } }
+      }
+    },
+    "/api/multiply": {
+      "post": {
+        "tags": ["Calculator"],
+        "summary": "Multiply two numbers",
+        "operationId": "multiply",
+        "requestBody": { "$ref": "#/components/requestBodies/BinaryOperation" },
+        "responses": { "200": { "$ref": "#/components/responses/Result" }, "400": { "$ref": "#/components/responses/BadRequest" }, "422": { "$ref": "#/components/responses/InvalidCalculation" } }
+      }
+    },
+    "/api/divide": {
+      "post": {
+        "tags": ["Calculator"],
+        "summary": "Divide the first number by the second",
+        "description": "Returns 422 when the divisor is zero.",
+        "operationId": "divide",
+        "requestBody": { "$ref": "#/components/requestBodies/BinaryOperation" },
+        "responses": { "200": { "$ref": "#/components/responses/Result" }, "400": { "$ref": "#/components/responses/BadRequest" }, "422": { "$ref": "#/components/responses/InvalidCalculation" } }
+      }
+    },
+    "/api/power": {
+      "post": {
+        "tags": ["Calculator"],
+        "summary": "Raise the first number to the power of the second",
+        "operationId": "power",
+        "requestBody": { "$ref": "#/components/requestBodies/BinaryOperation" },
+        "responses": { "200": { "$ref": "#/components/responses/Result" }, "400": { "$ref": "#/components/responses/BadRequest" }, "422": { "$ref": "#/components/responses/InvalidCalculation" } }
+      }
+    },
+    "/api/square-root": {
+      "post": {
+        "tags": ["Calculator"],
+        "summary": "Calculate a square root",
+        "description": "Returns 422 when the input is negative.",
+        "operationId": "squareRoot",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UnaryOperands" },
+              "example": { "a": 81 }
+            }
+          }
+        },
+        "responses": { "200": { "$ref": "#/components/responses/Result" }, "400": { "$ref": "#/components/responses/BadRequest" }, "422": { "$ref": "#/components/responses/InvalidCalculation" } }
+      }
+    },
+    "/api/percentage": {
+      "post": {
+        "tags": ["Calculator"],
+        "summary": "Calculate a percentage",
+        "description": "Calculates a percent of b: a × b ÷ 100.",
+        "operationId": "percentage",
+        "requestBody": { "$ref": "#/components/requestBodies/BinaryOperation" },
+        "responses": { "200": { "$ref": "#/components/responses/Result" }, "400": { "$ref": "#/components/responses/BadRequest" }, "422": { "$ref": "#/components/responses/InvalidCalculation" } }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BinaryOperands": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["a", "b"],
+        "properties": {
+          "a": { "type": "number", "description": "First operand" },
+          "b": { "type": "number", "description": "Second operand" }
+        }
+      },
+      "UnaryOperands": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["a"],
+        "properties": {
+          "a": { "type": "number", "description": "Operand" }
+        }
+      },
+      "ResultResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["result"],
+        "properties": { "result": { "type": "number" } }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["error"],
+        "properties": { "error": { "type": "string" } }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["status"],
+        "properties": { "status": { "type": "string", "const": "ok" } }
+      }
+    },
+    "requestBodies": {
+      "BinaryOperation": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/BinaryOperands" },
+            "example": { "a": 12, "b": 3 }
+          }
+        }
+      }
+    },
+    "responses": {
+      "Result": {
+        "description": "Calculation completed",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ResultResponse" },
+            "example": { "result": 15 }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "The request body is invalid",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": { "error": "b is required" }
+          }
+        }
+      },
+      "InvalidCalculation": {
+        "description": "The operands cannot produce a valid result",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": { "error": "division by zero" }
+          }
+        }
+      }
+    }
+  }
+}

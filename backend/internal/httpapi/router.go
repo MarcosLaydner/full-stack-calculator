@@ -8,6 +8,7 @@ import (
 func NewHandler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", health)
+	mux.HandleFunc("GET /docs", docs)
 	mux.HandleFunc("POST /api/add", add)
 	mux.HandleFunc("POST /api/subtract", subtract)
 	mux.HandleFunc("POST /api/multiply", multiply)
