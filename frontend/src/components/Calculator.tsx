@@ -28,6 +28,16 @@ export function Calculator() {
 
   useEffect(() => () => activeRequest.current?.abort(), [])
 
+  function invalidateActiveRequest() {
+    if (activeRequest.current === null) {
+      return
+    }
+    requestID.current++
+    activeRequest.current.abort()
+    activeRequest.current = null
+    setIsLoading(false)
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
@@ -69,9 +79,7 @@ export function Calculator() {
   }
 
   function clear() {
-    requestID.current++
-    activeRequest.current?.abort()
-    activeRequest.current = null
+    invalidateActiveRequest()
     setFirst('')
     setSecond('')
     setResult('0')
@@ -98,6 +106,7 @@ export function Calculator() {
                 aria-label={item.label}
                 aria-pressed={operation === item.value}
                 onClick={() => {
+                  invalidateActiveRequest()
                   setOperation(item.value)
                   setError('')
                 }}
@@ -116,7 +125,10 @@ export function Calculator() {
               type="number"
               step="any"
               value={first}
-              onChange={(event) => setFirst(event.target.value)}
+              onChange={(event) => {
+                invalidateActiveRequest()
+                setFirst(event.target.value)
+              }}
               placeholder="0"
             />
           </label>
@@ -128,7 +140,10 @@ export function Calculator() {
                 type="number"
                 step="any"
                 value={second}
-                onChange={(event) => setSecond(event.target.value)}
+                onChange={(event) => {
+                  invalidateActiveRequest()
+                  setSecond(event.target.value)
+                }}
                 placeholder="0"
               />
             </label>

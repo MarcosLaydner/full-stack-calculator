@@ -83,4 +83,59 @@ describe('Calculator', () => {
     expect(screen.getByText('0')).toBeInTheDocument()
     expect(screen.queryByText('42')).not.toBeInTheDocument()
   })
+
+  it('ignores an in-flight result after the operation changes', async () => {
+    let resolveRequest!: (response: Response) => void
+    vi.spyOn(globalThis, 'fetch').mockImplementation(() => new Promise((resolve) => {
+      resolveRequest = resolve
+    }))
+    render(<Calculator />)
+
+    await userEvent.type(screen.getByLabelText('First number'), '35')
+    await userEvent.type(screen.getByLabelText('Second number'), '7')
+    await userEvent.click(screen.getByRole('button', { name: 'Calculate' }))
+    const requestOptions = vi.mocked(fetch).mock.calls[0][1]
+    await userEvent.click(screen.getByRole('button', { name: 'Multiply' }))
+
+    expect(requestOptions?.signal?.aborted).toBe(true)
+    expect(screen.getByRole('button', { name: 'Multiply' })).toHaveAttribute('aria-pressed', 'true')
+
+    await act(async () => {
+      resolveRequest(resultResponse(42))
+    })
+
+    expect(screen.getByText('0')).toBeInTheDocument()
+    expect(screen.queryByText('42')).not.toBeInTheDocument()
+  })
+
+  it('ignores an in-flight result after an operand changes', async () => {
+    let resolveRequest!: (response: Response) => void
+    vi.spyOn(globalThis, 'fetch').mockImplementation(() => new Promise((resolve) => {
+      resolveRequest = resolve
+    }))
+    render(<Calculator />)
+
+    await userEvent.type(screen.getByLabelText('First number'), '35')
+    await userEvent.type(screen.getByLabelText('Second number'), '7')
+    await userEvent.click(screen.getByRole('button', { name: 'Calculate' }))
+    const requestOptions = vi.mocked(fetch).mock.calls[0][1]
+    await userEvent.type(screen.getByLabelText('First number'), '0')
+
+    expect(requestOptions?.signal?.aborted).toBe(true)
+    expect(screen.getByLabelText('First number')).toHaveValue(350)
+
+    await act(async () => {
+      resolveRequest(resultResponse(42))
+    })
+
+    expect(screen.getByText('0')).toBeInTheDocument()
+    expect(screen.queryByText('42')).not.toBeInTheDocument()
+  })
 })
+
+function resultResponse(result: number): Response {
+  return new Response(JSON.stringify({ result }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' }
+  })
+}
