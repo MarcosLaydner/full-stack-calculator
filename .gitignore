@@ -27,6 +27,14 @@ go.work.sum
 # env file
 .env
 
+# Node
+node_modules/
+dist/
+coverage/
+
+# Local binaries
+bin/
+
 # Editor/IDE
 # .idea/
 # .vscode/
