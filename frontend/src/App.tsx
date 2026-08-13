@@ -1,3 +1,5 @@
+import { Calculator } from './components/Calculator'
+
 export function App() {
   return (
     <main className="page-shell">
@@ -8,7 +10,8 @@ export function App() {
           <h1>Make it count.</h1>
         </div>
       </header>
-      <footer>Calculated by a Go microservice</footer>
+      <Calculator />
+      <footer>Calculated by a Go microservice · Made by MarcosLaydner</footer>
     </main>
   )
 }
